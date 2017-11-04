@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Chinook.Api.Data;
+using Chinook.Api.ViewModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +31,16 @@ namespace Chinook.Api
 			{
 				options.UseNpgsql(Configuration.GetConnectionString("chinook-dev-db"));
 			});
+
+			// configure automapper.
+			var mapperCfg = new MapperConfiguration(cfg =>
+			{
+				cfg.CreateMap<Artist, ArtistViewModel>()
+					.ForMember(avm => avm.Albums, o => o.MapFrom(a => a.Album.Select(al => al.Title)));
+				cfg.CreateMap<Album, AlbumViewModel>()
+					.ForMember(avm => avm.Artist, o => o.MapFrom(a => a.Artist.Name));
+			});
+			services.AddScoped<IMapper>(f => mapperCfg.CreateMapper());
 
             services.AddMvc();
         }

@@ -7,5 +7,7 @@ namespace Chinook.Api.ViewModels
 {
     public class ArtistViewModel
     {
-    }
+		public string Name { get; set; }
+		public ICollection<string> Albums { get; set; }
+	}
 }
