@@ -29,7 +29,7 @@ namespace Chinook.Api
         {
 			services.AddDbContextPool<ChinookContext>(options =>
 			{
-				options.UseNpgsql(Configuration.GetConnectionString("chinook-dev-db"));
+				options.UseNpgsql(Configuration.GetConnectionString("chinook"));
 			});
 
 			// configure automapper.
