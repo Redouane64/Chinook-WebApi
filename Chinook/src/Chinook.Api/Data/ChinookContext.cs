@@ -40,7 +40,6 @@ namespace Chinook.Api.Data
                 entity.Property(e => e.ArtistId).ValueGeneratedNever();
             });
 
-			Database.ExecuteSqlCommand(File.ReadAllText("Chinook_PostgreSql.sql"));
         }
     }
 }
