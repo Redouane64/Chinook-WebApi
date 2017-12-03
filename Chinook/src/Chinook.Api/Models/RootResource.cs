@@ -5,9 +5,16 @@ using System.Threading.Tasks;
 
 namespace Chinook.Api.Models
 {
-    public class AlbumModel
+    public class RootResource : Resource
     {
-		public string Title { get; set; }
-		public string Artist { get; set; }
+		public Link Artists
+		{
+			get; set;
+		}
+
+		public Link Albums
+		{
+			get; set;
+		}
 	}
 }

@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace Chinook.Api.Models
 {
-    public class Resource
+	public abstract class Resource : Link
     {
-		public string Href
+		public Link Self
 		{
 			get; set;
 		}

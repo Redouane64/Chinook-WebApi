@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Chinook.Api.ViewModels
+namespace Chinook.Api.Models
 {
-    public class ArtistViewModel
+    public class ArtistResource : Resource
     {
 		public string Name { get; set; }
-		public ICollection<string> Albums { get; set; }
 	}
 }

@@ -7,47 +7,34 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Chinook.Api.Data;
 using AutoMapper;
-using Chinook.Api.ViewModels;
+using Chinook.Api.Models;
 
 namespace Chinook.Api.Controllers
 {
-    [Produces("application/json")]
-    [Route("api/Artists")]
+    [Route("api/[controller]")]
     public class ArtistsController : Controller
     {
-        private readonly ChinookContext _context;
-		private readonly IMapper _mapper;
 
-		public ArtistsController(ChinookContext context, IMapper mapper)
+		public ArtistsController()
         {
-            _context = context;
-			_mapper = mapper;
 		}
 
         // GET: api/Artists
-        [HttpGet]
-        public IEnumerable<ArtistViewModel> GetArtist()
+        [HttpGet(Name = nameof(GetArtists))]
+        public async Task<IActionResult> GetArtists()
         {
-            return _mapper.Map<IEnumerable<ArtistViewModel>>(_context.Artist.Include(nameof(Artist.Album)));
+			// TO DO:
+
+			return Ok();
         }
 
         // GET: api/Artists/5
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = nameof(GetArtist))]
         public async Task<IActionResult> GetArtist([FromRoute] int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+			// TO DO:
 
-            var artist = await _context.Artist.Include(nameof(Artist.Album)).SingleOrDefaultAsync(m => m.ArtistId == id);
-
-            if (artist == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(_mapper.Map<ArtistViewModel>(artist));
+			return NotFound();
         }
 
     }

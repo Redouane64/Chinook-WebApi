@@ -40,15 +40,15 @@ namespace Chinook.Api
 			});
 
 			// configure automapper.
-			var mapperCfg = new MapperConfiguration(cfg =>
-			{
-				cfg.CreateMap<Artist, ArtistModel>()
-					.ForMember(avm => avm.Albums, o => o.MapFrom(a => a.Album.Select(al => al.Title)));
-				cfg.CreateMap<Album, AlbumModel>()
-					.ForMember(avm => avm.Artist, o => o.MapFrom(a => a.Artist.Name));
-			});
+			//var mapperCfg = new MapperConfiguration(cfg =>
+			//{
+			//	cfg.CreateMap<Artist, ArtistResource>()
+			//		.ForMember(avm => avm.Albums, o => o.MapFrom(a => a.Album.Select(al => al.Title)));
+			//	cfg.CreateMap<Album, AlbumResource>()
+			//		.ForMember(avm => avm.Artist, o => o.MapFrom(a => a.Artist.Name));
+			//});
 
-			services.AddScoped<IMapper>(f => mapperCfg.CreateMapper());
+			//services.AddScoped<IMapper>(f => mapperCfg.CreateMapper());
 
             services.AddMvc(options =>
 			{
@@ -74,6 +74,8 @@ namespace Chinook.Api
 				options.DefaultApiVersion = new ApiVersion(1, 0);
 				options.ReportApiVersions = true;
 			});
+
+			services.AddAutoMapper();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
