@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using Chinook.Api.Infrastructure;
@@ -14,7 +15,6 @@ namespace Chinook.Api.Filters
 	public class LinkRewritingFilter : IAsyncResultFilter
 	{
 		private readonly IUrlHelperFactory _urlHelperFactory;
-		private LinkRewriter _linkRewriter;
 
 		public LinkRewritingFilter(IUrlHelperFactory urlHelperFactory)
 		{
@@ -23,56 +23,98 @@ namespace Chinook.Api.Filters
 
 		public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
 		{
-			_linkRewriter = new LinkRewriter(_urlHelperFactory.GetUrlHelper(context));
+			var objectResult = context.Result as ObjectResult;
 
-			if (context.Result is ObjectResult result && result.StatusCode == (int)System.Net.HttpStatusCode.OK)
+			if (objectResult?.Value == null || objectResult?.StatusCode != (int)HttpStatusCode.OK)
 			{
-				var model = result.Value;
-				var ti = model.GetType().GetTypeInfo();
+				await next();
+				return;
+			}
 
-				var modelProperties = GetAll(ti, i => i.DeclaredProperties).Where(p => p.CanRead).ToArray();
+			var rewriter = new LinkRewriter(_urlHelperFactory.GetUrlHelper(context));
 
-				var linkProperties = modelProperties.Where(p => p.PropertyType == typeof(Link) && p.CanWrite);
+			RewriteAllLinks(objectResult.Value, rewriter);
 
-				foreach (var property in linkProperties)
+			await next();
+
+		}
+
+		private IEnumerable<T> GetAll<T>(TypeInfo typeInfo, Func<TypeInfo, IEnumerable<T>> accessor)
+		{
+			while (typeInfo != null)
+			{
+				foreach (var t in accessor(typeInfo))
 				{
-					Link rewrittenLink = null;
-
-					if (property.GetValue(model) is Link value)
-					{
-						rewrittenLink = _linkRewriter.Rewrite(value);
-
-						property.SetValue(model, rewrittenLink);
-					}
-
-					if (property.Name == nameof(Resource.Self))
-					{
-						modelProperties.SingleOrDefault(p => p.Name == nameof(Link.Href))?.SetValue(model, rewrittenLink?.Href);
-						modelProperties.SingleOrDefault(p => p.Name == nameof(Link.Method))?.SetValue(model, rewrittenLink?.Method);
-						modelProperties.SingleOrDefault(p => p.Name == nameof(Link.Relation))?.SetValue(model, rewrittenLink?.Relation);
-					}
+					yield return t;
 				}
 
-				var arrayProperties = modelProperties.Where(p => p.PropertyType.IsArray);
+				typeInfo = typeInfo.BaseType?.GetTypeInfo();
+			}
+		}
 
-				// Helper Function
+		private void RewriteAllLinks(object model, LinkRewriter rewriter)
+		{
+			if (model == null)
+				return;
 
-				IEnumerable<T> GetAll<T>(TypeInfo typeInfo, Func<TypeInfo, IEnumerable<T>> accessor)
+			var modelProperties = GetAll(model.GetType().GetTypeInfo(), i => i.DeclaredProperties).Where(p => p.CanRead).ToArray();
+
+			var linkProperties = modelProperties.Where(p => p.CanWrite && p.PropertyType == typeof(Link));
+
+			foreach (var linkProperty in linkProperties)
+			{
+				var rewritten = rewriter.Rewrite(linkProperty.GetValue(model) as Link);
+
+				if (rewritten == null)
+					continue;
+
+				linkProperty.SetValue(model, rewritten);
+
+				if (linkProperty.Name == nameof(Resource.Self))
 				{
-					while (typeInfo != null)
-					{
-						foreach (var t in accessor(typeInfo))
-						{
-							yield return t;
-						}
-
-						typeInfo = typeInfo.BaseType?.GetTypeInfo();
-					}
+					modelProperties.SingleOrDefault(p => p.Name == nameof(Link.Href))?.SetValue(model, rewritten.Href);
+					modelProperties.SingleOrDefault(p => p.Name == nameof(Link.Method))?.SetValue(model, rewritten.Method);
+					modelProperties.SingleOrDefault(p => p.Name == nameof(Link.Relation))?.SetValue(model, rewritten.Relation);
 				}
 			}
 
-			await next();
-			return;
+			var arrayProperties = modelProperties.Where(p => p.PropertyType.IsArray);
+			RewriteLinksInArrays(arrayProperties, model, rewriter);
+
+			var objectProperties = modelProperties.Except(linkProperties).Except(arrayProperties);
+			RewriteLinksInNestedObjects(objectProperties, model, rewriter);
+
 		}
+
+		private void RewriteLinksInArrays(IEnumerable<PropertyInfo> arrayProperties, object model, LinkRewriter rewriter)
+		{
+			foreach (var arrayProperty in arrayProperties)
+			{
+				var array = arrayProperty.GetValue(model) as Array ?? new Array[0];
+
+				foreach (var element in array)
+				{
+					RewriteAllLinks(element, rewriter);
+				}
+			}
+		}
+
+		private void RewriteLinksInNestedObjects(IEnumerable<PropertyInfo> objectProperties, object model, LinkRewriter rewriter)
+		{
+			foreach (var objectProperty in objectProperties)
+			{
+				if (objectProperty.PropertyType == typeof(string))
+				{
+					continue;
+				}
+
+				var typeInfo = objectProperty.PropertyType.GetTypeInfo();
+				if (typeInfo.IsClass)
+				{
+					RewriteAllLinks(objectProperty.GetValue(model), rewriter);
+				}
+			}
+		}
+
 	}
 }

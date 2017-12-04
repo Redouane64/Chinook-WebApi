@@ -10,20 +10,29 @@ namespace Chinook.Api.Models
 		public static Link Create(string routeName, object routeValue = null) 
 			=> new Link() { RouteName = routeName, RouteValue = routeValue };
 
-		[JsonProperty(Order = -3)]
+		public static Link CreateCollection(string routeName, object routeValue)
+			=> new Link()
+			{
+				RouteName = routeName,
+				RouteValue = routeValue,
+				Method = GetMethod,
+				Relation = new string[] { "collection" }
+			};
+
+		[JsonProperty(Order = -4)]
 		public string Href
 		{
 			get; set;
 		}
 
-		[JsonProperty(Order = -2, DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore)]
+		[JsonProperty(Order = -3, DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore)]
 		[DefaultValue(GetMethod)]
 		public string Method
 		{
 			get; set;
 		}
 
-		[JsonProperty(Order = -1, PropertyName = "rel", NullValueHandling = NullValueHandling.Ignore)]
+		[JsonProperty(Order = -2, PropertyName = "rel", NullValueHandling = NullValueHandling.Ignore)]
 		public string[] Relation
 		{
 			get; set;

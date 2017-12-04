@@ -17,14 +17,14 @@ namespace Chinook.Api.Services
 
 		public ArtistResource GetArtist(int id)
 		{
-			var artist = _context.Artist.Where(a => a.ArtistId == id).FirstOrDefault();
+			var artist = _context.Artist.FirstOrDefault(a => a.ArtistId == id);
 
 			return Mapper.Map<ArtistResource>(artist);
 		}
 
 		public IEnumerable<ArtistResource> GetArtists()
 		{
-			var artists = _context.Artist.OrderByDescending(a => a.Name);
+			var artists = _context.Artist.OrderBy(a => a.Name);
 
 			return Mapper.Map<IEnumerable<ArtistResource>>(artists);
 		}

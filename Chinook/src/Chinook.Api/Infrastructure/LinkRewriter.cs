@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Chinook.Api.Models;
+﻿using Chinook.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chinook.Api.Infrastructure
 {
-    public class LinkRewriter
+	public class LinkRewriter
     {
 		private readonly IUrlHelper _urlHelper;
 

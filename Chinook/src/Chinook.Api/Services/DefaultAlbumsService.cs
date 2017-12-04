@@ -24,7 +24,15 @@ namespace Chinook.Api.Services
 
 		public IEnumerable<AlbumResource> GetAlbums()
 		{
-			var albums = _context.Album.OrderByDescending(a => a.Title);
+			var albums = _context.Album.OrderBy(a => a.Title);
+
+			return Mapper.Map<IEnumerable<AlbumResource>>(albums);
+		}
+
+		public IEnumerable<AlbumResource> GetAlbumsForArtist(int artistId)
+		{
+			var albums = _context.Album.Where(a => a.ArtistId == artistId)
+										.OrderBy(a => a.Title);
 
 			return Mapper.Map<IEnumerable<AlbumResource>>(albums);
 		}

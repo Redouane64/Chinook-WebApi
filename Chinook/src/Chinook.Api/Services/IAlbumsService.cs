@@ -7,5 +7,6 @@ namespace Chinook.Api.Services
 	{
 		IEnumerable<AlbumResource> GetAlbums();
 		AlbumResource GetAlbum(int id);
+		IEnumerable<AlbumResource> GetAlbumsForArtist(int artistId);
 	}
 }

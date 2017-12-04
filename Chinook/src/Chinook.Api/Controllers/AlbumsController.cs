@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Chinook.Api.Data;
 using Chinook.Api.Models;
-using AutoMapper;
 using Chinook.Api.Services;
 
 namespace Chinook.Api.Controllers
 {
-    [Route("api/[controller]")]
+	[Route("api/[controller]")]
     public class AlbumsController : Controller
     {
 		private readonly IAlbumsService _albumsService;
@@ -28,7 +21,15 @@ namespace Chinook.Api.Controllers
         {
 			var albums = _albumsService.GetAlbums();
 
-			return Ok(albums);
+			var link = Link.CreateCollection(nameof(GetAlbums), null);
+
+			var collection = new Collection<AlbumResource>()
+			{
+				Self = link,
+				Value = albums.ToArray()
+			};
+
+			return Ok(collection);
         }
 
         // GET: api/Albums/5
