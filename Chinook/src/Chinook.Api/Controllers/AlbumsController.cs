@@ -20,7 +20,7 @@ namespace Chinook.Api.Controllers
 		}
 
         // GET: api/Albums
-        [HttpGet]
+        [HttpGet(Name = nameof(GetAlbums))]
         public async Task<IActionResult> GetAlbums()
         {
 			// TO DO:
@@ -29,7 +29,7 @@ namespace Chinook.Api.Controllers
         }
 
         // GET: api/Albums/5
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = nameof(GetAlbum))]
         public async Task<IActionResult> GetAlbum([FromRoute] int id)
         {
 			// TO DO:

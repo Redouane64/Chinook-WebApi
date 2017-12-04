@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Chinook.Api.Controllers
 {
-	[Route("/")]
+	[Route("api/")]
     public class RootController : Controller
     {
 		[HttpGet(Name = nameof(GetRoot))]

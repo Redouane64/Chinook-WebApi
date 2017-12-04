@@ -53,6 +53,7 @@ namespace Chinook.Api
             services.AddMvc(options =>
 			{
 				options.Filters.Add(typeof(JsonExceptionFilter));
+				options.Filters.Add(typeof(LinkRewritingFilter));
 
 				// alter default json formatter to support ion+json format.
 				var jsonFormatter = options.OutputFormatters.OfType<JsonOutputFormatter>().Single();
