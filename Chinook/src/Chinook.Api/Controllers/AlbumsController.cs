@@ -8,31 +8,39 @@ using Microsoft.EntityFrameworkCore;
 using Chinook.Api.Data;
 using Chinook.Api.Models;
 using AutoMapper;
+using Chinook.Api.Services;
 
 namespace Chinook.Api.Controllers
 {
     [Route("api/[controller]")]
     public class AlbumsController : Controller
     {
+		private readonly IAlbumsService _albumsService;
 
-		public AlbumsController()
+		public AlbumsController(IAlbumsService albumsService)
         {
+			_albumsService = albumsService;
 		}
 
         // GET: api/Albums
         [HttpGet(Name = nameof(GetAlbums))]
-        public async Task<IActionResult> GetAlbums()
+        public IActionResult GetAlbums()
         {
-			// TO DO:
+			var albums = _albumsService.GetAlbums();
 
-			return Ok();
+			return Ok(albums);
         }
 
         // GET: api/Albums/5
         [HttpGet("{id:int}", Name = nameof(GetAlbum))]
-        public async Task<IActionResult> GetAlbum([FromRoute] int id)
+        public IActionResult GetAlbum([FromRoute] int id)
         {
-			// TO DO:
+			var album = _albumsService.GetAlbum(id);
+
+			if (album != null)
+			{
+				return Ok(album);
+			}
 
 			return NotFound();
         }
