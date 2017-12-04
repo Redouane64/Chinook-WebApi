@@ -1,54 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Chinook.Api.Data;
-using AutoMapper;
-using Chinook.Api.ViewModels;
+using Chinook.Api.Models;
+using Chinook.Api.Services;
 
 namespace Chinook.Api.Controllers
 {
-    [Produces("application/json")]
-    [Route("api/Artists")]
+	[Route("api/[controller]")]
     public class ArtistsController : Controller
     {
-        private readonly ChinookContext _context;
-		private readonly IMapper _mapper;
+		private readonly IArtistsService _artistsService;
+		private readonly IAlbumsService _albumsService;
 
-		public ArtistsController(ChinookContext context, IMapper mapper)
+		public ArtistsController(IArtistsService artistsService, IAlbumsService albumsService)
         {
-            _context = context;
-			_mapper = mapper;
+			_artistsService = artistsService;
+			_albumsService = albumsService;
 		}
 
         // GET: api/Artists
-        [HttpGet]
-        public IEnumerable<ArtistViewModel> GetArtist()
+        [HttpGet(Name = nameof(GetArtists))]
+        public IActionResult GetArtists()
         {
-            return _mapper.Map<IEnumerable<ArtistViewModel>>(_context.Artist.Include(nameof(Artist.Album)));
+			var artists = _artistsService.GetArtists();
+
+			var link = Link.CreateCollection(nameof(GetArtists), null);
+
+			var collection = new Collection<ArtistResource>()
+			{
+				Self = link,
+				Value = artists.ToArray()
+			};
+
+			return Ok(collection);
         }
 
         // GET: api/Artists/5
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetArtist([FromRoute] int id)
+        [HttpGet("{id:int}", Name = nameof(GetArtist))]
+        public IActionResult GetArtist([FromRoute] int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+			var artist = _artistsService.GetArtist(id);
 
-            var artist = await _context.Artist.Include(nameof(Artist.Album)).SingleOrDefaultAsync(m => m.ArtistId == id);
+			if (artist != null)
+			{
+				return Ok(artist);
+			}
 
-            if (artist == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(_mapper.Map<ArtistViewModel>(artist));
+			return NotFound();
         }
 
-    }
+		[HttpGet("{id:int}/albums", Name = nameof(GetArtistAlbums))]
+		public IActionResult GetArtistAlbums([FromRoute] int id)
+		{
+			var albums = _albumsService.GetAlbumsForArtist(id);
+
+			var link = Link.CreateCollection(nameof(GetArtistAlbums), null);
+
+			var collection = new Collection<AlbumResource>()
+			{
+				Self = link,
+				Value = albums.ToArray()
+			};
+
+			return Ok(collection);
+		}
+
+
+
+	}
 }

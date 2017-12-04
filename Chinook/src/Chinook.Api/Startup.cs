@@ -1,21 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using AutoMapper;
 using Chinook.Api.Data;
-using Chinook.Api.ViewModels;
+using Chinook.Api.Filters;
+using Chinook.Api.Infrastructure;
+using Chinook.Api.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Chinook.Api
 {
-    public class Startup
+	public class Startup
     {
         public Startup(IConfiguration configuration)
         {
@@ -32,17 +32,36 @@ namespace Chinook.Api
 				options.UseNpgsql(Configuration.GetConnectionString("chinook"));
 			});
 
-			// configure automapper.
-			var mapperCfg = new MapperConfiguration(cfg =>
-			{
-				cfg.CreateMap<Artist, ArtistViewModel>()
-					.ForMember(avm => avm.Albums, o => o.MapFrom(a => a.Album.Select(al => al.Title)));
-				cfg.CreateMap<Album, AlbumViewModel>()
-					.ForMember(avm => avm.Artist, o => o.MapFrom(a => a.Artist.Name));
-			});
-			services.AddScoped<IMapper>(f => mapperCfg.CreateMapper());
+			services.AddScoped<IAlbumsService, DefaultAlbumsService>();
+			services.AddScoped<IArtistsService, DefaultArtistsService>();
 
-            services.AddMvc();
+			services.AddMvc(options =>
+			{
+				options.Filters.Add(typeof(JsonExceptionFilter));
+				options.Filters.Add(typeof(LinkRewritingFilter));
+
+				// alter default json formatter to support ion+json format.
+				var jsonFormatter = options.OutputFormatters.OfType<JsonOutputFormatter>().Single();
+				options.OutputFormatters.Remove(jsonFormatter);
+
+				options.OutputFormatters.Add(new IonJsonFormatter(jsonFormatter));
+			});
+
+			services.AddRouting(options =>
+			{
+				options.LowercaseUrls = true;
+			});
+
+			services.AddApiVersioning(options =>
+			{
+				options.ApiVersionReader = new MediaTypeApiVersionReader();
+				options.ApiVersionSelector = new DefaultApiVersionSelector(options);
+				options.AssumeDefaultVersionWhenUnspecified = true;
+				options.DefaultApiVersion = new ApiVersion(1, 0);
+				options.ReportApiVersions = true;
+			});
+
+			services.AddAutoMapper();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
