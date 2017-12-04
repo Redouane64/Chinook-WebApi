@@ -1,53 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Chinook.Api.Data;
-using Chinook.Api.ViewModels;
-using AutoMapper;
+using Chinook.Api.Models;
+using Chinook.Api.Services;
 
 namespace Chinook.Api.Controllers
 {
-    [Produces("application/json")]
-    [Route("api/Albums")]
+	[Route("api/[controller]")]
     public class AlbumsController : Controller
     {
-        private readonly ChinookContext _context;
-		private readonly IMapper _mapper;
+		private readonly IAlbumsService _albumsService;
 
-		public AlbumsController(ChinookContext context, IMapper mapper)
+		public AlbumsController(IAlbumsService albumsService)
         {
-            _context = context;
-			_mapper = mapper;
+			_albumsService = albumsService;
 		}
 
         // GET: api/Albums
-        [HttpGet]
-        public IEnumerable<AlbumViewModel> GetAlbum()
+        [HttpGet(Name = nameof(GetAlbums))]
+        public IActionResult GetAlbums()
         {
-            return _mapper.Map<IEnumerable<AlbumViewModel>>(_context.Album.Include(nameof(Album.Artist)));
+			var albums = _albumsService.GetAlbums();
+
+			var link = Link.CreateCollection(nameof(GetAlbums), null);
+
+			var collection = new Collection<AlbumResource>()
+			{
+				Self = link,
+				Value = albums.ToArray()
+			};
+
+			return Ok(collection);
         }
 
         // GET: api/Albums/5
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetAlbum([FromRoute] int id)
+        [HttpGet("{id:int}", Name = nameof(GetAlbum))]
+        public IActionResult GetAlbum([FromRoute] int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+			var album = _albumsService.GetAlbum(id);
 
-            var album = await _context.Album.Include(nameof(Album.Artist)).SingleOrDefaultAsync(m => m.AlbumId == id);
+			if (album != null)
+			{
+				return Ok(album);
+			}
 
-            if (album == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(_mapper.Map<AlbumViewModel>(album));
+			return NotFound();
         }
 
     }
