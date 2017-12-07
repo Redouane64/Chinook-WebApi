@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Chinook.Api.Models;
 using Chinook.Api.Services;
 using Microsoft.Extensions.Options;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Chinook.Api.Controllers
 {
@@ -24,7 +26,7 @@ namespace Chinook.Api.Controllers
 
         // GET: api/Artists
         [HttpGet(Name = nameof(GetArtists))]
-        public IActionResult GetArtists([FromQuery]PagingOptions pagingOptions)
+        public async Task<IActionResult> GetArtists([FromQuery]PagingOptions pagingOptions, CancellationToken cancellationToken)
         {
 			if (!ModelState.IsValid)
 			{
@@ -38,7 +40,7 @@ namespace Chinook.Api.Controllers
 			pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
 			pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
 
-			var artists = _artistsService.GetArtists(pagingOptions);
+			var artists = await _artistsService.GetArtistsAsync(pagingOptions, cancellationToken);
 
 			var link = Link.CreateCollection(nameof(GetArtists), null);
 			var collection = PagedCollection<ArtistResource>.CreatePagedCollection(link, artists.Items, artists.TotalSize, pagingOptions);
@@ -47,10 +49,10 @@ namespace Chinook.Api.Controllers
         }
 
         // GET: api/Artists/5
-        [HttpGet("{id:int}", Name = nameof(GetArtist))]
-        public IActionResult GetArtist([FromRoute] int id)
+        [HttpGet("{id:int}", Name = nameof(GetArtistAsync))]
+        public async Task<IActionResult> GetArtistAsync([FromRoute] int id, CancellationToken cancellationToken)
         {
-			var artist = _artistsService.GetArtist(id);
+			var artist = await _artistsService.GetArtistAsync(id, cancellationToken);
 
 			if (artist != null)
 			{
@@ -61,7 +63,9 @@ namespace Chinook.Api.Controllers
         }
 
 		[HttpGet("{id:int}/albums", Name = nameof(GetArtistAlbums))]
-		public IActionResult GetArtistAlbums([FromRoute] int id, [FromQuery]PagingOptions pagingOptions)
+		public async Task<IActionResult> GetArtistAlbums([FromRoute] int id, 
+											 [FromQuery]PagingOptions pagingOptions, 
+											 CancellationToken cancellationToken)
 		{
 			if (!ModelState.IsValid)
 			{
@@ -75,7 +79,7 @@ namespace Chinook.Api.Controllers
 			pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
 			pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
 
-			var albums = _albumsService.GetAlbumsForArtist(id, pagingOptions);
+			var albums = await _albumsService.GetAlbumsForArtistAsync(id, pagingOptions, cancellationToken);
 
 			var link = Link.CreateCollection(nameof(GetArtistAlbums), null);
 
