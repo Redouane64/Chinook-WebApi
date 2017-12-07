@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Chinook.Api.Models;
 using Chinook.Api.Services;
 using Microsoft.Extensions.Options;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Chinook.Api.Controllers
 {
@@ -20,7 +22,7 @@ namespace Chinook.Api.Controllers
 
         // GET: api/Albums
         [HttpGet(Name = nameof(GetAlbums))]
-        public IActionResult GetAlbums([FromQuery]PagingOptions pagingOptions)
+        public async Task<IActionResult> GetAlbums([FromQuery]PagingOptions pagingOptions, CancellationToken cancellationToken)
         {
 			if (!ModelState.IsValid)
 			{
@@ -34,7 +36,7 @@ namespace Chinook.Api.Controllers
 			pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
 			pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
 
-			var albums = _albumsService.GetAlbums(pagingOptions);
+			var albums = await _albumsService.GetAlbumsAsync(pagingOptions, cancellationToken);
 
 			var link = Link.CreateCollection(nameof(GetAlbums));
 			var collection = PagedCollection<AlbumResource>.CreatePagedCollection(link, albums.Items, albums.TotalSize, pagingOptions);
@@ -44,9 +46,9 @@ namespace Chinook.Api.Controllers
 
         // GET: api/Albums/5
         [HttpGet("{id:int}", Name = nameof(GetAlbum))]
-        public IActionResult GetAlbum([FromRoute] int id)
+        public async Task<IActionResult> GetAlbum([FromRoute] int id, CancellationToken cancellationToken)
         {
-			var album = _albumsService.GetAlbum(id);
+			var album = await _albumsService.GetAlbumAsync(id, cancellationToken);
 
 			if (album != null)
 			{

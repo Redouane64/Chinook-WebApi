@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Chinook.Api.Data;
 using Chinook.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chinook.Api.Services
 {
@@ -15,22 +19,24 @@ namespace Chinook.Api.Services
 			_context = context;
 		}
 
-		public ArtistResource GetArtist(int id)
+		public async Task<ArtistResource> GetArtistAsync(int id, CancellationToken cancellationToken = default)
 		{
-			var artist = _context.Artist.FirstOrDefault(a => a.ArtistId == id);
+			var artist = await _context.Artist.FirstOrDefaultAsync(a => a.ArtistId == id, cancellationToken);
 
 			return Mapper.Map<ArtistResource>(artist);
 		}
 
-		public PageResult<ArtistResource> GetArtists(PagingOptions pagingOptions)
+		public async Task<PageResult<ArtistResource>> GetArtistsAsync(PagingOptions pagingOptions, 
+																		CancellationToken cancellationToken = default)
 		{
 			var allArtists = _context.Artist.OrderBy(a => a.Name);
 
-			var artists = allArtists.Skip(pagingOptions.Offset.Value).Take(pagingOptions.Limit.Value);
+			var artists = await allArtists.Skip(pagingOptions.Offset.Value)
+									.Take(pagingOptions.Limit.Value)
+									.ProjectTo<ArtistResource>()
+									.ToArrayAsync(cancellationToken);
 
-			var result = Mapper.Map<IEnumerable<ArtistResource>>(artists);
-
-			return new PageResult<ArtistResource>() { Items = result.ToArray(), TotalSize = allArtists.Count() };
+			return new PageResult<ArtistResource>() { Items = artists, TotalSize = allArtists.Count() };
 		}
 
 	}
