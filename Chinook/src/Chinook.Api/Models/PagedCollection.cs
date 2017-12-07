@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 
 namespace Chinook.Api.Models
 {
@@ -12,10 +14,97 @@ namespace Chinook.Api.Models
 				Size = size,
 				Offset = pagingOptions.Offset,
 				Limit = pagingOptions.Limit,
-
-				// TO DO: complete navigation properties.
+				First = self,
+				Last = GetLastLink(self, size, pagingOptions),
+				Previous = GetPreviousLink(self, size, pagingOptions),
+				Next = GetNextLink(self, size, pagingOptions)
 			};
-		/*
+
+
+		private static Link GetNextLink(Link self, int size, PagingOptions pagingOptions)
+		{
+			if (pagingOptions?.Limit == null)
+				return null;
+			if (pagingOptions?.Offset == null)
+				return null;
+
+			var limit = pagingOptions.Limit.Value;
+			var offset = pagingOptions.Offset.Value;
+
+			var next = offset + limit;
+			if (next >= size)
+				return null;
+
+			var parameters = new RouteValueDictionary(self.RouteValue)
+			{
+				["limit"] = limit,
+				["offset"] = next
+			};
+
+			var newLink = Link.CreateCollection(self.RouteName, parameters);
+			return newLink;
+		}
+
+		private static Link GetLastLink(Link self, int size, PagingOptions pagingOptions)
+		{
+			if (pagingOptions?.Limit == null)
+				return null;
+
+			var limit = pagingOptions.Limit.Value;
+
+			if (size <= limit)
+				return null;
+
+			var offset = Math.Ceiling((size - (double)limit) / limit) * limit;
+
+			var parameters = new RouteValueDictionary(self.RouteValue)
+			{
+				["limit"] = limit,
+				["offset"] = offset
+			};
+			var newLink = Link.CreateCollection(self.RouteName, parameters);
+
+			return newLink;
+		}
+
+		private static Link GetPreviousLink(Link self, int size, PagingOptions pagingOptions)
+		{
+			if (pagingOptions?.Limit == null)
+				return null;
+			if (pagingOptions?.Offset == null)
+				return null;
+
+			var limit = pagingOptions.Limit.Value;
+			var offset = pagingOptions.Offset.Value;
+
+			if (offset == 0)
+			{
+				return null;
+			}
+
+			if (offset > size)
+			{
+				return GetLastLink(self, size, pagingOptions);
+			}
+
+			var previousPage = Math.Max(offset - limit, 0);
+
+			if (previousPage <= 0)
+			{
+				return self;
+			}
+
+			var parameters = new RouteValueDictionary(self.RouteValue)
+			{
+				["limit"] = limit,
+				["offset"] = previousPage
+			};
+			var newLink = Link.CreateCollection(self.RouteName, parameters);
+
+			return newLink;
+		}
+
+
 		[JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
 		public Link First
 		{
@@ -27,7 +116,7 @@ namespace Chinook.Api.Models
 		{
 			get; set;
 		}
-
+		
 		[JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
 		public Link Next
 		{
@@ -39,7 +128,7 @@ namespace Chinook.Api.Models
 		{
 			get; set;
 		}
-		*/
+		
 		[JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
 		public int? Limit
 		{
@@ -51,7 +140,7 @@ namespace Chinook.Api.Models
 		{
 			get; set;
 		}
-		
+
 		public int Size
 		{
 			get; set;
