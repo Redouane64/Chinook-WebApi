@@ -22,11 +22,15 @@ namespace Chinook.Api.Services
 			return Mapper.Map<ArtistResource>(artist);
 		}
 
-		public IEnumerable<ArtistResource> GetArtists()
+		public PageResult<ArtistResource> GetArtists(PagingOptions pagingOptions)
 		{
-			var artists = _context.Artist.OrderBy(a => a.Name);
+			var allArtists = _context.Artist.OrderBy(a => a.Name);
 
-			return Mapper.Map<IEnumerable<ArtistResource>>(artists);
+			var artists = allArtists.Skip(pagingOptions.Offset.Value).Take(pagingOptions.Limit.Value);
+
+			var result = Mapper.Map<IEnumerable<ArtistResource>>(artists);
+
+			return new PageResult<ArtistResource>() { Items = result.ToArray(), TotalSize = allArtists.Count() };
 		}
 
 	}

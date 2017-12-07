@@ -5,8 +5,8 @@ namespace Chinook.Api.Services
 {
 	public interface IAlbumsService
 	{
-		IEnumerable<AlbumResource> GetAlbums();
+		PageResult<AlbumResource> GetAlbums(PagingOptions pagingOptions);
 		AlbumResource GetAlbum(int id);
-		IEnumerable<AlbumResource> GetAlbumsForArtist(int artistId);
+		PageResult<AlbumResource> GetAlbumsForArtist(int artistId, PagingOptions pagingOptions);
 	}
 }

@@ -3,6 +3,7 @@ using AutoMapper;
 using Chinook.Api.Data;
 using Chinook.Api.Filters;
 using Chinook.Api.Infrastructure;
+using Chinook.Api.Models;
 using Chinook.Api.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -62,6 +63,8 @@ namespace Chinook.Api
 			});
 
 			services.AddAutoMapper();
+
+			services.Configure<PagingOptions>(Configuration.GetSection("DefaultPagingOptions"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

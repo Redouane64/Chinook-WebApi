@@ -5,7 +5,7 @@ namespace Chinook.Api.Services
 {
 	public interface IArtistsService
     {
-		IEnumerable<ArtistResource> GetArtists();
+		PageResult<ArtistResource> GetArtists(PagingOptions pagingOptions);
 		ArtistResource GetArtist(int id);
     }
 }

@@ -22,19 +22,32 @@ namespace Chinook.Api.Services
 			return Mapper.Map<AlbumResource>(album);
 		}
 
-		public IEnumerable<AlbumResource> GetAlbums()
+		public PageResult<AlbumResource> GetAlbums(PagingOptions pagingOptions)
 		{
-			var albums = _context.Album.OrderBy(a => a.Title);
+			var allAlbums = _context.Album.OrderBy(a => a.Title);
 
-			return Mapper.Map<IEnumerable<AlbumResource>>(albums);
+			var albums = allAlbums.Skip(pagingOptions.Offset.Value)
+								  .Take(pagingOptions.Limit.Value);
+
+			var result = Mapper.Map<IEnumerable<AlbumResource>>(albums);
+
+			return new PageResult<AlbumResource>() { Items = result.ToArray(), TotalSize = allAlbums.Count() };
 		}
 
-		public IEnumerable<AlbumResource> GetAlbumsForArtist(int artistId)
+		public PageResult<AlbumResource> GetAlbumsForArtist(int artistId, PagingOptions pagingOptions)
 		{
-			var albums = _context.Album.Where(a => a.ArtistId == artistId)
+			var allAlbums = _context.Album.Where(a => a.ArtistId == artistId)
 										.OrderBy(a => a.Title);
 
-			return Mapper.Map<IEnumerable<AlbumResource>>(albums);
+			var albums = allAlbums.Skip(pagingOptions.Offset.Value).Take(pagingOptions.Limit.Value);
+
+			var result = Mapper.Map<IEnumerable<AlbumResource>>(albums);
+
+			return new PageResult<AlbumResource>()
+			{
+				Items = result.ToArray(),
+				TotalSize = allAlbums.Count()
+			};
 		}
 	}
 }
