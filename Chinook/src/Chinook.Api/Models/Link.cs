@@ -10,7 +10,7 @@ namespace Chinook.Api.Models
 		public static Link Create(string routeName, object routeValue = null) 
 			=> new Link() { RouteName = routeName, RouteValue = routeValue };
 
-		public static Link CreateCollection(string routeName, object routeValue)
+		public static Link CreateCollection(string routeName, object routeValue = null)
 			=> new Link()
 			{
 				RouteName = routeName,

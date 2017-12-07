@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Chinook.Api.Models;
 using Chinook.Api.Services;
+using Microsoft.Extensions.Options;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Chinook.Api.Controllers
 {
@@ -10,35 +13,46 @@ namespace Chinook.Api.Controllers
     {
 		private readonly IArtistsService _artistsService;
 		private readonly IAlbumsService _albumsService;
+		private readonly PagingOptions _defaultPagingOptions;
 
-		public ArtistsController(IArtistsService artistsService, IAlbumsService albumsService)
+		public ArtistsController(IArtistsService artistsService, 
+									IAlbumsService albumsService,
+									IOptions<PagingOptions> defaultPagingOptions)
         {
 			_artistsService = artistsService;
 			_albumsService = albumsService;
+			_defaultPagingOptions = defaultPagingOptions.Value;
 		}
 
         // GET: api/Artists
         [HttpGet(Name = nameof(GetArtists))]
-        public IActionResult GetArtists()
+        public async Task<IActionResult> GetArtists([FromQuery]PagingOptions pagingOptions, CancellationToken cancellationToken)
         {
-			var artists = _artistsService.GetArtists();
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(new ApiError()
+				{
+					Message = "Invalid arguments provided.",
+					Details = ModelState.FirstOrDefault(k => k.Value.Errors.Any()).Value.Errors.FirstOrDefault().ErrorMessage
+				});
+			}
+
+			pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
+			pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
+
+			var artists = await _artistsService.GetArtistsAsync(pagingOptions, cancellationToken);
 
 			var link = Link.CreateCollection(nameof(GetArtists), null);
-
-			var collection = new Collection<ArtistResource>()
-			{
-				Self = link,
-				Value = artists.ToArray()
-			};
+			var collection = PagedCollection<ArtistResource>.CreatePagedCollection(link, artists.Items, artists.TotalSize, pagingOptions);
 
 			return Ok(collection);
         }
 
         // GET: api/Artists/5
-        [HttpGet("{id:int}", Name = nameof(GetArtist))]
-        public IActionResult GetArtist([FromRoute] int id)
+        [HttpGet("{id:int}", Name = nameof(GetArtistAsync))]
+        public async Task<IActionResult> GetArtistAsync([FromRoute] int id, CancellationToken cancellationToken)
         {
-			var artist = _artistsService.GetArtist(id);
+			var artist = await _artistsService.GetArtistAsync(id, cancellationToken);
 
 			if (artist != null)
 			{
@@ -49,17 +63,27 @@ namespace Chinook.Api.Controllers
         }
 
 		[HttpGet("{id:int}/albums", Name = nameof(GetArtistAlbums))]
-		public IActionResult GetArtistAlbums([FromRoute] int id)
+		public async Task<IActionResult> GetArtistAlbums([FromRoute] int id, 
+											 [FromQuery]PagingOptions pagingOptions, 
+											 CancellationToken cancellationToken)
 		{
-			var albums = _albumsService.GetAlbumsForArtist(id);
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(new ApiError()
+				{
+					Message = "Invalid arguments provided.",
+					Details = ModelState.FirstOrDefault(k => k.Value.Errors.Any()).Value.Errors.FirstOrDefault().ErrorMessage
+				});
+			}
+
+			pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
+			pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
+
+			var albums = await _albumsService.GetAlbumsForArtistAsync(id, pagingOptions, cancellationToken);
 
 			var link = Link.CreateCollection(nameof(GetArtistAlbums), null);
 
-			var collection = new Collection<AlbumResource>()
-			{
-				Self = link,
-				Value = albums.ToArray()
-			};
+			var collection = PagedCollection<AlbumResource>.CreatePagedCollection(link, albums.Items, albums.TotalSize, pagingOptions);
 
 			return Ok(collection);
 		}

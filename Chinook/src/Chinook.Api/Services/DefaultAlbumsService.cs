@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Chinook.Api.Data;
 using Chinook.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chinook.Api.Services
 {
@@ -15,26 +19,42 @@ namespace Chinook.Api.Services
 			_context = context;
 		}
 
-		public AlbumResource GetAlbum(int id)
+		public async Task<AlbumResource> GetAlbumAsync(int id, CancellationToken cancellationToken = default)
 		{
-			var album = _context.Album.FirstOrDefault(a => a.AlbumId == id);
+			var album = await _context.Album.FirstOrDefaultAsync(a => a.AlbumId == id, cancellationToken);
 
 			return Mapper.Map<AlbumResource>(album);
 		}
 
-		public IEnumerable<AlbumResource> GetAlbums()
+		public async Task<PageResult<AlbumResource>> GetAlbumsAsync(PagingOptions pagingOptions, 
+																	CancellationToken cancellationToken = default)
 		{
-			var albums = _context.Album.OrderBy(a => a.Title);
+			var allAlbums = _context.Album.OrderBy(a => a.Title);
 
-			return Mapper.Map<IEnumerable<AlbumResource>>(albums);
+			var albums = await allAlbums.Skip(pagingOptions.Offset.Value)
+								  .Take(pagingOptions.Limit.Value)
+								  .ProjectTo<AlbumResource>()
+								  .ToArrayAsync(cancellationToken);
+
+			return new PageResult<AlbumResource>() { Items = albums, TotalSize = allAlbums.Count() };
 		}
 
-		public IEnumerable<AlbumResource> GetAlbumsForArtist(int artistId)
+		public async Task<PageResult<AlbumResource>> GetAlbumsForArtistAsync(int artistId, PagingOptions pagingOptions,
+											CancellationToken cancellationToken = default)
 		{
-			var albums = _context.Album.Where(a => a.ArtistId == artistId)
+			var allAlbums = _context.Album.Where(a => a.ArtistId == artistId)
 										.OrderBy(a => a.Title);
 
-			return Mapper.Map<IEnumerable<AlbumResource>>(albums);
+			var albums = await allAlbums.Skip(pagingOptions.Offset.Value)
+								.Take(pagingOptions.Limit.Value)
+								.ProjectTo<AlbumResource>()
+								.ToArrayAsync(cancellationToken);
+
+			return new PageResult<AlbumResource>()
+			{
+				Items = albums,
+				TotalSize = allAlbums.Count()
+			};
 		}
 	}
 }

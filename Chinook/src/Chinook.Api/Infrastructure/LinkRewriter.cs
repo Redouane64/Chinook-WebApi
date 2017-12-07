@@ -14,6 +14,9 @@ namespace Chinook.Api.Infrastructure
 
 		public Link Rewrite(Link original)
 		{
+			if (original == null)
+				return null;
+
 			return new Link()
 			{
 				Href = _urlHelper.Link(original.RouteName, original.RouteValue),
