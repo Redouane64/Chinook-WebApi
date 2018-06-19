@@ -65,6 +65,8 @@ namespace Chinook.Api
 			services.AddAutoMapper();
 
 			services.Configure<PagingOptions>(Configuration.GetSection("DefaultPagingOptions"));
+
+			services.AddResponseCompression();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
