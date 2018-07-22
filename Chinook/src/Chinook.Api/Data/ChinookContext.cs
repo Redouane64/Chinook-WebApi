@@ -11,7 +11,6 @@ namespace Chinook.Api.Data
 		public ChinookContext(DbContextOptions<ChinookContext> options) 
 			: base(options)
 		{
-			Database.Migrate();
 		}
 
         public virtual DbSet<Album> Album { get; set; }

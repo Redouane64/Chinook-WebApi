@@ -10,17 +10,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="4.0.1" />
+		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="5.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.App" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="2.3.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.1.0" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0" />
-	</ItemGroup>
-	
-	<ItemGroup>
-		<None Include="Chinook_PostgreSql.sql">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.1.1" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.1.1" />
 	</ItemGroup>
 
 </Project>
